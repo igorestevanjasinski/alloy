@@ -32,8 +32,9 @@ Main (unreleased)
 - Fix an issue on Windows where uninstalling Alloy did not remove it from the
   Add/Remove programs list. (@rfratto)
 
-
 - Fixed issue where text labels displayed outside of component node's boundary. (@hainenber)
+
+- In `mimir.rules.kubernetes`, fix an issue where unrecoverable errors from the Mimir API were retried. (@56quarters)
 
 v1.0.0 (2024-04-09)
 -------------------

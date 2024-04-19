@@ -2,12 +2,14 @@ package rules
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
 
 	"github.com/grafana/alloy/internal/alloy/logging/level"
 	"github.com/grafana/alloy/internal/component/common/kubernetes"
+	"github.com/grafana/alloy/internal/mimir/client"
 	"github.com/hashicorp/go-multierror"
 	promv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/prometheus/prometheus/model/rulefmt"
@@ -30,7 +32,7 @@ func (c *Component) eventLoop(ctx context.Context) {
 
 		if err != nil {
 			retries := c.queue.NumRequeues(evt)
-			if retries < 5 {
+			if retries < 5 && !errors.Is(err, client.ErrUnrecoverable) {
 				c.metrics.eventsRetried.WithLabelValues(string(evt.Typ)).Inc()
 				c.queue.AddRateLimited(evt)
 				level.Error(c.log).Log(
@@ -42,7 +44,7 @@ func (c *Component) eventLoop(ctx context.Context) {
 			} else {
 				c.metrics.eventsFailed.WithLabelValues(string(evt.Typ)).Inc()
 				level.Error(c.log).Log(
-					"msg", "failed to process event, max retries exceeded",
+					"msg", "failed to process event, unrecoverable error or max retries exceeded",
 					"retries", fmt.Sprintf("%d/5", retries),
 					"err", err,
 				)
