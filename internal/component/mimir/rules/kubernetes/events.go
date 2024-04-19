@@ -2,7 +2,6 @@ package rules
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"time"
@@ -32,7 +31,7 @@ func (c *Component) eventLoop(ctx context.Context) {
 
 		if err != nil {
 			retries := c.queue.NumRequeues(evt)
-			if retries < 5 && !errors.Is(err, client.ErrUnrecoverable) {
+			if retries < 5 && !client.IsUnrecoverable(err) {
 				c.metrics.eventsRetried.WithLabelValues(string(evt.Typ)).Inc()
 				c.queue.AddRateLimited(evt)
 				level.Error(c.log).Log(
